@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alien Voyage: Nebula-9</title>
+  <style>
+    body {
+      background-color: #0d0e15;
+      color: #00ffcc;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    #game-container {
+      background-color: #161925;
+      border: 2px solid #00ffcc;
+      border-radius: 8px;
+      padding: 25px;
+      max-width: 650px;
+      width: 100%;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+    }
+
+    h1 {
+      text-align: center;
+      color: #ff007f;
+      margin-top: 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    #stats {
+      display: flex;
+      justify-content: space-between;
+      background: #0d0e15;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      font-weight: bold;
+      color: #e0e0e0;
+    }
+
+    #story {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 25px;
+      color: #ffffff;
+      min-height: 100px;
+    }
+
+    .btn-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    button {
+      background-color: transparent;
+      border: 1px solid #00ffcc;
+      color: #00ffcc;
+      padding: 12px 18px;
+      font-family: inherit;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    button:hover {
+      background-color: #00ffcc;
+      color: #0d0e15;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <h1>🚀 Alien Voyage</h1>
+    
+    <div id="stats">
+      <span>Shields: <span id="shield-val">100</span>%</span>
+      <span>Fuel: <span id="fuel-val">80</span>%</span>
+    </div>
+
+    <div id="story">Loading flight computer...</div>
+
+    <div id="choices" class="btn-grid"></div>
+  </div>
+
+  <script>
+    // Game State
+    let shields = 100;
+    let fuel = 80;
+
+    // DOM Elements
+    const storyEl = document.getElementById('story');
+    const choicesEl = document.getElementById('choices');
+    const shieldValEl = document.getElementById('shield-val');
+    const fuelValEl = document.getElementById('fuel-val');
+
+    // Update Dashboard Displays
+    function updateStats() {
+      shieldValEl.textContent = Math.max(0, shields);
+      fuelValEl.textContent = Math.max(0, fuel);
+    }
+
+    // Story Nodes
+    const storyNodes = {
+      start: {
+        text: "You are the pilot of the SS Starlight, floating near uncharted Planet X-42. Long-range scanners detect a mysterious glowing energy signature below.",
+        choices: [
+          { text: "📡 Scan the planet surface (-5% Fuel)", nextNode: "scan" },
+          { text: "🛬 Land directly near the signal (-15% Fuel)", nextNode: "land" },
+          { text: "📻 Open a wide-frequency radio hail", nextNode: "hail" }
+        ]
+      },
+      scan: {
+        text: "Probe launched! Scans reveal an ancient alien temple powered by a unstable crystal core. Atmospheric turbulence is high.",
+        fuelChange: -5,
+        choices: [
+          { text: "🛬 Land carefully in a nearby clearing (-10% Fuel)", nextNode: "clearing" },
+          { text: "🛸 Warp back to safe space (End Mission)", nextNode: "retreat" }
+        ]
+      },
+      hail: {
+        text: "You transmit on all frequencies. Suddenly, static fills your speakers followed by a low, rhythmic hum that drains your ship's energy!",
+        shieldChange: -20,
+        choices: [
+          { text: "🛡️ Raise emergency shields and dive down (-15% Fuel)", nextNode: "land" },
+          { text: "🚀 Fire thrusters and escape (-20% Fuel)", nextNode: "retreat" }
+        ]
+      },
+      land: {
+        text: "You break through violent atmospheric storm clouds. Rough landing! The ship takes minor hull stress, but you hit the ground near the glowing signal.",
+        shieldChange: -15,
+        fuelChange: -15,
+        choices: [
+          { text: "🚪 Step out in your EVA suit to inspect the signal", nextNode: "explore" },
+          { text: "🔍 Stay inside and deploy a land rover", nextNode: "rover" }
+        ]
+      },
+      clearing: {
+        text: "Thanks to your scan, you land smoothly in a peaceful clearing near the temple ruins.",
+        fuelChange: -10,
+        choices: [
+          { text: "🚪 Step out and enter the Alien Temple", nextNode: "temple" }
+        ]
+      },
+      explore: {
+        text: "Walking through alien flora, you discover a crystal monolith hovering above the soil. It pulses with light and restores power to your equipment!",
+        choices: [
+          { text: "💎 Touch the Crystal Monolith", nextNode: "win" }
+        ]
+      },
+      temple: {
+        text: "Inside the temple, you find an active star-map glowing in 3D projection. You've uncovered the secret coordinates to Nebula-9!",
+        choices: [
+          { text: "🌌 Download coordinates and claim victory", nextNode: "win" }
+        ]
+      },
+      rover: {
+        text: "Your rover uncovers an ancient defense drone! It fires a plasma blast before deactivating.",
+        shieldChange: -30,
+        choices: [
+          { text: "💎 Approach the glowing core while drone is down", nextNode: "win" },
+          { text: "🏃 Abandon mission and retreat", nextNode: "retreat" }
+        ]
+      },
+      win: {
+        text: "🎉 VICTORY! You successfully uncovered the ancient alien secret of Planet X-42 and secured vital technology for humanity!",
+        choices: [
+          { text: "🔄 Play Again", nextNode: "start", reset: true }
+        ]
+      },
+      retreat: {
+        text: "🛸 MISSION ABORTED: You engaged warp drive and escaped back to home orbit safely.",
+        choices: [
+          { text: "🔄 Play Again", nextNode: "start", reset: true }
+        ]
+      },
+      gameOver: {
+        text: "💥 CRITICAL FAILURE: Your ship suffered critical damage or ran out of fuel! The SS Starlight is lost in space...",
+        choices: [
+          { text: "🔄 Try Again", nextNode: "start", reset: true }
+        ]
+      }
+    };
+
+    // Show a story node
+    function showNode(nodeKey) {
+      const node = storyNodes[nodeKey];
+
+      // Reset state if starting over
+      if (node.reset) {
+        shields = 100;
+        fuel = 80;
+      }
+
+      // Apply stat updates
+      if (node.shieldChange) shields += node.shieldChange;
+      if (node.fuelChange) fuel += node.fuelChange;
+      updateStats();
+
+      // Check failure condition
+      if ((shields <= 0 || fuel <= 0) && nodeKey !== 'gameOver' && !node.reset) {
+        showNode('gameOver');
+        return;
+      }
+
+      // Set text
+      storyEl.textContent = node.text;
+
+      // Clear existing buttons
+      choicesEl.innerHTML = '';
+
+      // Create new choice buttons
+      node.choices.forEach(choice => {
+        const button = document.createElement('button');
+        button.textContent = choice.text;
+        button.onclick = () => showNode(choice.nextNode);
+        choicesEl.appendChild(button);
+      });
+    }
+
+    // Start Game
+    showNode('start');
+  </script>
+</body>
+</html>
