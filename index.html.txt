@@ -1,0 +1,165 @@
+import random
+import time
+
+# --- Game Setup & Data ---
+VOYAGES = {
+    "1": {
+        "name": "Orbital Station Alpha",
+        "difficulty": "Easy",
+        "aliens": ["Drone", "Scout", "Drone"],
+        "boss": "Commanding Centurion"
+    },
+    "2": {
+        "name": "The Crimson Sector (Mars Colony)",
+        "difficulty": "Medium",
+        "aliens": ["Stalker", "Acid Spitter", "Brute", "Scout"],
+        "boss": "Hive Overlord"
+    },
+    "3": {
+        "name": "The Deep Void (Derelict Starship)",
+        "difficulty": "Hard",
+        "aliens": ["Void Crawler", "Acid Spitter", "Shadow Stalker", "Brute"],
+        "boss": "Leviathan Mother"
+    }
+}
+
+ALIEN_STATS = {
+    "Drone": {"hp": 25, "attack": (5, 10)},
+    "Scout": {"hp": 35, "attack": (8, 14)},
+    "Stalker": {"hp": 45, "attack": (10, 18)},
+    "Acid Spitter": {"hp": 40, "attack": (12, 22)},
+    "Shadow Stalker": {"hp": 55, "attack": (15, 25)},
+    "Brute": {"hp": 80, "attack": (15, 25)},
+    "Commanding Centurion": {"hp": 100, "attack": (12, 20)},
+    "Hive Overlord": {"hp": 150, "attack": (15, 28)},
+    "Leviathan Mother": {"hp": 220, "attack": (20, 35)}
+}
+
+# Player Stats
+player = {
+    "hp": 100,
+    "max_hp": 100,
+    "ammo": 30,
+    "medkits": 2
+}
+
+def print_slow(text, delay=0.02):
+    """Prints text with a slight typing effect."""
+    for char in text:
+        print(char, end='', flush=True)
+        time.sleep(delay)
+    print()
+
+def display_status():
+    print(f"\n[ STATUS | HP: {player['hp']}/{player['max_hp']} | Ammo: {player['ammo']} | Medkits: {player['medkits']} ]")
+
+def combat_encounter(alien_name):
+    print(f"\n⚠️  AN ALIEN APPROACHES: {alien_name.upper()}! ⚠️")
+    alien_hp = ALIEN_STATS[alien_name]["hp"]
+    min_dmg, max_dmg = ALIEN_STATS[alien_name]["attack"]
+
+    while alien_hp > 0 and player["hp"] > 0:
+        display_status()
+        print(f"Target: {alien_name} | Target HP: {alien_hp}")
+        print("Actions:")
+        print("  [1] Blaster Shot (1 Ammo) - Standard attack")
+        print("  [2] Heavy Charge Shot (3 Ammo) - High damage")
+        print("  [3] Use Medkit (+40 HP)")
+        
+        choice = input("> ").strip()
+
+        if choice == "1":
+            if player["ammo"] >= 1:
+                player["ammo"] -= 1
+                damage = random.randint(15, 25)
+                alien_hp -= damage
+                print_slow(f"💥 You fire your blaster! Hit {alien_name} for {damage} damage.")
+            else:
+                print_slow("❌ Out of ammo! You wasted a turn trying to fire.")
+        elif choice == "2":
+            if player["ammo"] >= 3:
+                player["ammo"] -= 3
+                damage = random.randint(35, 55)
+                alien_hp -= damage
+                print_slow(f"💥💥 CHARGED SHOT! You hit {alien_name} for {damage} massive damage!")
+            else:
+                print_slow("❌ Not enough ammo for a charge shot!")
+                continue
+        elif choice == "3":
+            if player["medkits"] > 0:
+                player["medkits"] -= 1
+                player["hp"] = min(player["max_hp"], player["hp"] + 40)
+                print_slow("💖 You used a Medkit and recovered 40 HP!")
+            else:
+                print_slow("❌ No Medkits left!")
+                continue
+        else:
+            print("Invalid choice!")
+            continue
+
+        # Alien Attack Phase
+        if alien_hp > 0:
+            alien_damage = random.randint(min_dmg, max_dmg)
+            player["hp"] -= alien_damage
+            print_slow(f"🚨 The {alien_name} attacks back! You take {alien_damage} damage.")
+
+    if player["hp"] <= 0:
+        return False
+    
+    print_slow(f"\n✨ You defeated the {alien_name}!")
+    
+    # Random loot drop after victory
+    if random.random() < 0.6:
+        ammo_found = random.randint(5, 12)
+        player["ammo"] += ammo_found
+        print_slow(f"📦 Scavenged {ammo_found} ammo from the area.")
+    if random.random() < 0.25:
+        player["medkits"] += 1
+        print_slow("📦 Found a Medkit!")
+        
+    return True
+
+def start_game():
+    print("===========================================")
+    print("       ALIEN SHOOTER: VOYAGE OF DOOM       ")
+    print("===========================================")
+    print_slow("Welcome, Vanguard. Select your voyage destination to clear the alien infestation.\n")
+
+    print("AVAILABLE VOYAGES:")
+    for key, voyage in VOYAGES.items():
+        print(f"  [{key}] {voyage['name']} (Difficulty: {voyage['difficulty']})")
+
+    voyage_choice = ""
+    while voyage_choice not in VOYAGES:
+        voyage_choice = input("\nSelect Voyage (1-3): ").strip()
+
+    selected_voyage = VOYAGES[voyage_choice]
+    print_slow(f"\n🚀 Launching voyage to: {selected_voyage['name']}...")
+    time.sleep(1)
+
+    # Encounter list: standard aliens + boss at the end
+    encounter_list = list(selected_voyage["aliens"]) + [selected_voyage["boss"]]
+    total_targets = len(encounter_list)
+
+    for index, enemy in enumerate(encounter_list, 1):
+        if index == total_targets:
+            print_slow("\n🚨 WARNING: SECTOR BOSS DETECTED! PREPARE FOR FINAL ENGAGEMENT! 🚨")
+            time.sleep(1)
+        else:
+            print_slow(f"\n--- Sector Progress: Alien {index}/{total_targets} ---")
+            
+        success = combat_encounter(enemy)
+        if not success:
+            print("\n" + "="*40)
+            print("  MISSION FAILED! You were overwhelmed.  ")
+            print("="*40)
+            return
+
+    print("\n" + "="*50)
+    print("  MISSION ACCOMPLISHED! All threats eliminated!  ")
+    print("="*50)
+    print_slow(f"You have successfully cleared {selected_voyage['name']}. Excellent work, Vanguard!")
+
+# Run the game
+if __name__ == "__main__":
+    start_game()
