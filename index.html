@@ -192,13 +192,13 @@
     <div id="game-container">
         <div id="ui" class="hidden">
             <div class="hud-element" style="color: #2ed573;">Health: <span id="health">100</span></div>
-            <div class="hud-element" style="color: #ffa502;">Distance: <span id="distance">0</span>m</div>
+            <div class="hud-element" style="color: #ffa502;">Distance: <span id="distance">0</span>/300m</div>
             <div class="hud-element" style="color: #70a1ff;">Score: <span id="score">0</span></div>
         </div>
 
         <div id="menu-screen" class="overlay">
             <h1>PLANET VOYAGE</h1>
-            <p class="subtitle">Select a destination planet to launch your mission</p>
+            <p class="subtitle">Select a destination planet to launch your mission (Goal: Reach 300m)</p>
 
             <div class="planet-select-container">
                 <button class="planet-card" data-planet="pyros">
@@ -249,8 +249,6 @@
                     <div class="planet-desc">Nebula Anomaly.<br><b>Endless barrage.</b></div>
                 </button>
             </div>
-            </br></br>
-<p class="subtitle">©G-dragon15 2026</p>
         </div>
 
         <div id="game-over-screen" class="overlay hidden">
@@ -260,6 +258,15 @@
             </p>
             <button id="restart-btn" class="btn">Change Destination</button>
             <p class="restart-hint" style="margin-top: 15px;">Or press SPACE to Retry Planet</p>
+        </div>
+
+        <div id="victory-screen" class="overlay hidden">
+            <h1 style="color: #2ed573;">MISSION ACCOMPLISHED!</h1>
+            <p style="font-size: 18px; color: #dfe4ea; margin-bottom: 20px;">
+                You reached 300m! | Final Score: <span id="victory-score">0</span>
+            </p>
+            <button id="victory-btn" class="btn">Choose Next Planet</button>
+            <p class="restart-hint" style="margin-top: 15px;">Or press SPACE to Play Again</p>
         </div>
 
         <canvas id="gameCanvas" width="900" height="650"></canvas>
@@ -276,9 +283,14 @@
             const scoreEl = document.getElementById('score');
             const menuScreen = document.getElementById('menu-screen');
             const gameOverScreen = document.getElementById('game-over-screen');
+            const victoryScreen = document.getElementById('victory-screen');
             const finalScoreEl = document.getElementById('final-score');
             const finalDistanceEl = document.getElementById('final-distance');
+            const victoryScoreEl = document.getElementById('victory-score');
             const restartBtn = document.getElementById('restart-btn');
+            const victoryBtn = document.getElementById('victory-btn');
+
+            const TARGET_DISTANCE = 300;
 
             const PLANETS = {
                 pyros: { name: 'Pyros', bgGradient: ['#2b0a0a', '#421414', '#5e1717'], terrainColor: '#1a0505', enemyColor: '#ff4757', speedMultiplier: 1.4, healthMultiplier: 1.0, spawnRateModifier: 1.0 },
@@ -318,11 +330,13 @@
             });
 
             restartBtn.addEventListener('click', showMenu);
+            victoryBtn.addEventListener('click', showMenu);
 
             function showMenu() {
                 gameState = 'MENU';
                 menuScreen.classList.remove('hidden');
                 gameOverScreen.classList.add('hidden');
+                victoryScreen.classList.add('hidden');
                 uiEl.classList.add('hidden');
             }
 
@@ -340,6 +354,7 @@
                 gameState = 'PLAYING';
                 menuScreen.classList.add('hidden');
                 gameOverScreen.classList.add('hidden');
+                victoryScreen.classList.add('hidden');
                 uiEl.classList.remove('hidden');
                 
                 updateUI();
@@ -388,7 +403,7 @@
             });
 
             window.addEventListener('keydown', (e) => {
-                if (e.code === 'Space' && gameState === 'GAMEOVER') {
+                if (e.code === 'Space' && (gameState === 'GAMEOVER' || gameState === 'VICTORY')) {
                     startGame();
                 }
             });
@@ -427,6 +442,12 @@
 
                 if (frameCount % 10 === 0) {
                     distanceEl.textContent = distance;
+                }
+
+                // Check for 300m Victory Condition
+                if (distance >= TARGET_DISTANCE) {
+                    triggerVictory();
+                    return;
                 }
 
                 const baseRate = Math.max(16, 75 - Math.floor(distance / 40));
@@ -589,6 +610,12 @@
                 finalScoreEl.textContent = score;
                 finalDistanceEl.textContent = distance;
                 gameOverScreen.classList.remove('hidden');
+            }
+
+            function triggerVictory() {
+                gameState = 'VICTORY';
+                victoryScoreEl.textContent = score;
+                victoryScreen.classList.remove('hidden');
             }
 
             function gameLoop() {
