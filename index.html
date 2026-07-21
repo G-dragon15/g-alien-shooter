@@ -304,7 +304,6 @@
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
             
-            // Force pixelated rendering on canvas
             ctx.imageSmoothingEnabled = false;
 
             const uiEl = document.getElementById('ui');
@@ -323,7 +322,6 @@
             const continueBtn = document.getElementById('continue-btn');
 
             const TARGET_DISTANCE = 300;
-            const PSIZE = 4; // Pixel scale multiplier for sprites
 
             const PLANETS = {
                 pyros: { name: 'Pyros', bgGradient: ['#1a0000', '#330000', '#4a0000'], terrainColor: '#260000', enemyColor: '#ff4757', enemyDark: '#8b0000', speedMultiplier: 1.4, healthMultiplier: 1.0, spawnRateModifier: 1.0 },
@@ -351,7 +349,6 @@
             let particles = [];
             let terrainPoints = [];
 
-            // Card Listeners
             document.querySelectorAll('.planet-card').forEach(card => {
                 card.addEventListener('click', (e) => {
                     const target = e.currentTarget;
@@ -433,7 +430,6 @@
                     size: 6
                 });
 
-                // Pixel recoil particles
                 for (let i = 0; i < 4; i++) {
                     particles.push({
                         x: player.x + Math.cos(angle) * 15,
@@ -454,7 +450,8 @@
             });
 
             function spawnEnemy() {
-                const radius = Math.random() * 8 + 14;
+                // Larger collision radius (24px to 40px)
+                const radius = Math.random() * 16 + 24;
                 const x = Math.random() * (canvas.width - radius * 4) + radius * 2;
                 const y = -radius * 2;
                 const speed = (Math.random() * 1.2 + 1.2) * selectedPlanet.speedMultiplier;
@@ -465,7 +462,7 @@
                 });
             }
 
-            function createPixelExplosion(x, y, color, count = 12) {
+            function createPixelExplosion(x, y, color, count = 16) {
                 for (let i = 0; i < count; i++) {
                     const angle = Math.random() * Math.PI * 2;
                     const speed = Math.random() * 5 + 1;
@@ -516,7 +513,7 @@
                     const distToPlayer = Math.hypot(enemy.x - player.x, enemy.y - player.y);
                     if (distToPlayer < enemy.radius + player.radius) {
                         player.health -= 20;
-                        createPixelExplosion(enemy.x, enemy.y, enemy.color, 24);
+                        createPixelExplosion(enemy.x, enemy.y, enemy.color, 28);
                         enemies.splice(eIndex, 1);
                         updateUI();
                         if (player.health <= 0) triggerGameOver();
@@ -539,7 +536,7 @@
                             projectiles.splice(pIndex, 1);
 
                             if (enemy.health <= 0) {
-                                createPixelExplosion(enemy.x, enemy.y, enemy.color, 20);
+                                createPixelExplosion(enemy.x, enemy.y, enemy.color, 24);
                                 score += Math.floor(enemy.radius * enemy.maxHealth);
                                 enemies.splice(eIndex, 1);
                                 updateUI();
@@ -556,13 +553,12 @@
                 });
             }
 
-            // Draw Pixel Art Player Ship
             function drawPixelPlayer(x, y, angle) {
                 ctx.save();
                 ctx.translate(x, y);
                 ctx.rotate(angle + Math.PI / 2);
 
-                const p = 3; // Pixel scale factor
+                const p = 3;
                 const sprite = [
                     [0,0,0,1,1,0,0,0],
                     [0,0,1,1,1,1,0,0],
@@ -574,9 +570,9 @@
                 ];
 
                 const palette = {
-                    1: '#2ed573', // Main Hull
-                    2: '#ffffff', // Cockpit
-                    3: '#ffa502'  // Thruster Flash
+                    1: '#2ed573',
+                    2: '#ffffff',
+                    3: '#ffa502'
                 };
 
                 const offsetX = (sprite[0].length * p) / 2;
@@ -595,12 +591,13 @@
                 ctx.restore();
             }
 
-            // Draw Pixel Art Alien
+            // Draw Larger Pixel Art Alien
             function drawPixelAlien(enemy) {
                 ctx.save();
                 ctx.translate(enemy.x, enemy.y);
 
-                const p = Math.max(2, Math.floor(enemy.radius / 5));
+                // Scaled up pixel size multiplier for larger enemies
+                const p = Math.max(5, Math.floor(enemy.radius / 3.5));
                 const frame = Math.floor(enemy.animFrame) % 2;
 
                 const sprite = frame === 0 ? [
@@ -639,7 +636,6 @@
             }
 
             function draw() {
-                // Background Gradient
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 gradient.addColorStop(0, selectedPlanet.bgGradient[0]);
                 gradient.addColorStop(0.5, selectedPlanet.bgGradient[1]);
@@ -647,7 +643,6 @@
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Pixel Stars
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 for (let i = 0; i < 40; i++) {
                     const sx = (i * 37) % canvas.width;
@@ -655,7 +650,6 @@
                     ctx.fillRect(sx, sy, 3, 3);
                 }
 
-                // Blocky Terrain
                 ctx.fillStyle = selectedPlanet.terrainColor;
                 ctx.beginPath();
                 ctx.moveTo(0, canvas.height);
@@ -663,22 +657,18 @@
                 ctx.lineTo(canvas.width, canvas.height);
                 ctx.fill();
 
-                // Pixel Explosions/Particles
                 particles.forEach(p => {
                     ctx.fillStyle = p.color;
                     ctx.fillRect(Math.floor(p.x), Math.floor(p.y), p.size, p.size);
                 });
 
-                // Pixel Projectiles
                 ctx.fillStyle = '#ffffff';
                 projectiles.forEach(p => {
                     ctx.fillRect(Math.floor(p.x) - 3, Math.floor(p.y) - 3, p.size, p.size);
                 });
 
-                // Pixel Enemies
                 enemies.forEach(e => drawPixelAlien(e));
 
-                // Pixel Player
                 if (gameState === 'PLAYING') {
                     drawPixelPlayer(player.x, player.y, player.angle);
                 }
